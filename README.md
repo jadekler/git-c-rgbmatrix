@@ -1,3 +1,6 @@
+THIS IS A FORK OF [https://github.com/hzeller/rpi-rgb-led-matrix](https://github.com/hzeller/rpi-rgb-led-matrix)
+
+
 Controlling RGB LED display with Raspberry Pi GPIO
 ==================================================
 
@@ -506,3 +509,5 @@ the clocking with the needed time-period; that way we get down to 200ns.
 [git-submodules]: http://git-scm.com/book/en/Git-Tools-Submodules
 [emlid-rt]: http://www.emlid.com/raspberry-pi-real-time-kernel-available-for-download/
 [rt-paper]: https://www.osadl.org/fileadmin/dam/rtlws/12/Brown.pdf
+=======
+# git-c-rgbmatrix
