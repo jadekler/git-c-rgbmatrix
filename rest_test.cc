@@ -70,6 +70,8 @@ int main() {
             cout << activityArr[i] << " ";
         }
 
-        usleep(10000);
+        cout << endl;
+
+        usleep(5000);
     }
 }
