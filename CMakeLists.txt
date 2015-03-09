@@ -6,3 +6,7 @@ project (rest_test)
 
 add_executable (rest_test rest_test.cc lib/json-parser/json.c)
 target_link_libraries(rest_test curl)
+
+add_executable (pingpongping pingpongping.cc lib/matrix/lib/gpio.cc)
+target_link_libraries(pingpongping)
+
