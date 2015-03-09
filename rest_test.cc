@@ -17,7 +17,7 @@ string performGet() {
 
     curl_global_init(CURL_GLOBAL_ALL); //pretty obvious
     curl = curl_easy_init();
-    
+
     std::string readBuffer;
     curl_easy_setopt(curl, CURLOPT_URL, "http://pingpongping.cfapps.io/activity");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
@@ -46,7 +46,6 @@ int main() {
         json_value jsonParsedInput;
 
         jsonParsedInput = *json_parse(input, strlen(input));
-        cout << endl << "woo" << endl;
 
         for (int i = 0; i < jsonParsedInput.u.array.length; i++) {
             json_value *arrItem = jsonParsedInput.u.array.values[i];
@@ -71,6 +70,6 @@ int main() {
             cout << activityArr[i] << " ";
         }
 
-        usleep(5000);
+        usleep(10000);
     }
 }
