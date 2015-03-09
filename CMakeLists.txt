@@ -4,5 +4,5 @@
 cmake_minimum_required(VERSION 2.8)
 project (rest_test)
 
-add_executable (rest_test rest_test.cc)
+add_executable (rest_test rest_test.cc lib/json-parser/json.c)
 target_link_libraries(rest_test curl)
