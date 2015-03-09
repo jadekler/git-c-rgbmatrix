@@ -61,8 +61,9 @@ int main() {
 
             int activitySecondsFromNow = now - activityDateSeconds;
 
-            if (activitySecondsFromNow < 32) {
-                activityArr[activitySecondsFromNow] = isActive;
+            int lag = 5; // 5 seconds lag
+            if (activitySecondsFromNow >= 0 && activitySecondsFromNow < 32 + lag) {
+                activityArr[activitySecondsFromNow - lag] = isActive;
             }
         }
 
@@ -72,6 +73,6 @@ int main() {
 
         cout << endl;
 
-        usleep(5000);
+        usleep(1000000);
     }
 }
