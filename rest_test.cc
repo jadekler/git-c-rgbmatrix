@@ -12,9 +12,12 @@ void performGet();
 int main() {
     performGet();
 
-    bool activity[32];
+    time_t now;
+    time(&now);
+
+    int activityArr[32]; // 0 = inactive, 1 = active, 2 = unknown
     for (int i = 0; i < 32; i++) {
-        activity[i] = false;
+        activityArr[i] = 2;
     }
 
     char const *input = data.c_str();
@@ -25,14 +28,22 @@ int main() {
 
         bool isActive = arrItem->u.object.values[0].value->u.boolean;
         string activityDateString = arrItem->u.object.values[1].value->u.string.ptr;
-        activityDateString = activityDateString.substr(0, 19);                      // Remove microseconds
-        replace(activityDateString.begin(), activityDateString.end(), 'T', ' ');    // Remove T in middle
+        activityDateString = activityDateString.substr(0, 19);                      // remove microseconds
+        replace(activityDateString.begin(), activityDateString.end(), 'T', ' ');    // remove T in middle
 
         struct tm tm;
         strptime(activityDateString.c_str(), "%Y-%m-%d %H:%M:%S", &tm);
-        time_t activityDateSeconds = mktime(&tm);
+        time_t activityDateSeconds = mktime(&tm) - 21600; // convert from UTC to MT
 
-        cout << activityDateString << " " << activityDateSeconds << endl;
+        int activitySecondsFromNow = now - activityDateSeconds;
+
+        if (activitySecondsFromNow < 32) {
+            activityArr[activitySecondsFromNow] = isActive;
+        }
+    }
+
+    for (int i = 0; i < 32; i++) {
+        cout << activityArr[i] << " ";
     }
 
     return 0;
@@ -57,6 +68,7 @@ void performGet() {
     curl_global_init(CURL_GLOBAL_ALL); //pretty obvious
     curl = curl_easy_init();
 
+//    curl_easy_setopt(curl, CURLOPT_URL, "http://pingpongping.cfapps.io/activity");
     curl_easy_setopt(curl, CURLOPT_URL, "http://pingpongping.cfapps.io/activity");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
 
