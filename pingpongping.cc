@@ -24,6 +24,7 @@
 #include "lib/json-parser/json.h"
 
 using namespace rgb_matrix;
+using namespace std;
 
 class VolumeBars : public ThreadedCanvasManipulator {
 public:
