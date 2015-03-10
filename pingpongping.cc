@@ -3,11 +3,19 @@
 // This code is public domain
 // (but note, that the led-matrix library this depends on is GPL v2)
 
-#include "lib/matrix/include/led-matrix.h"
-#include "lib/matrix/include/threaded-canvas-manipulator.h"
+#include "led-matrix.h"
+#include "threaded-canvas-manipulator.h"
 
 #include <assert.h>
 #include <getopt.h>
+#include <limits.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <algorithm>
 
 using namespace rgb_matrix;
 
@@ -29,7 +37,7 @@ public:
         // Start the loop
         while (running()) {
             canvas()->SetPixel(5, 15, 0, 200, 0);
-            usleep(delay_ms_ * 1000);
+            usleep(1000000);
         }
     }
 
