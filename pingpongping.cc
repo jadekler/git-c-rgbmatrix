@@ -25,30 +25,6 @@
 
 using namespace rgb_matrix;
 
-static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-    ((std::string*)userp)->append((char*)contents, size * nmemb);
-    return size * nmemb;
-}
-
-string performGet() {
-    CURL *curl; //our curl object
-
-    curl_global_init(CURL_GLOBAL_ALL); //pretty obvious
-    curl = curl_easy_init();
-
-    std::string readBuffer;
-    curl_easy_setopt(curl, CURLOPT_URL, "http://pingpongping.cfapps.io/activity");
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-
-    curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-    curl_global_cleanup();
-
-    return readBuffer;
-}
-
 class VolumeBars : public ThreadedCanvasManipulator {
 public:
     VolumeBars(Canvas *m, int delay_ms = 50, int numBars = 8)
@@ -122,6 +98,29 @@ public:
     }
 
 private:
+    static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+        ((std::string*)userp)->append((char*)contents, size * nmemb);
+        return size * nmemb;
+    }
+
+    string performGet() {
+        CURL *curl; //our curl object
+
+        curl_global_init(CURL_GLOBAL_ALL); //pretty obvious
+        curl = curl_easy_init();
+
+        std::string readBuffer;
+        curl_easy_setopt(curl, CURLOPT_URL, "http://pingpongping.cfapps.io/activity");
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+        curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        curl_global_cleanup();
+
+        return readBuffer;
+    }
+
     void drawBarRow(int bar, uint8_t y, uint8_t r, uint8_t g, uint8_t b) {
         for (uint8_t x = bar * barWidth_; x < (bar + 1) * barWidth_; ++x) {
             canvas()->SetPixel(x, height_ - 1 - y, r, g, b);
