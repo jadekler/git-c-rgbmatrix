@@ -17,6 +17,12 @@
 
 #include <algorithm>
 
+#include <iostream>
+#include <curl/curl.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include "lib/json-parser/json.h"
+
 using namespace rgb_matrix;
 
 class VolumeBars : public ThreadedCanvasManipulator {
