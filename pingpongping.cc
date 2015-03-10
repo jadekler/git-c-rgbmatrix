@@ -68,33 +68,28 @@ public:
 
                 struct tm tm;
                 strptime(activityDateString.c_str(), "%Y-%m-%d %H:%M:%S", &tm);
-                time_t activityDateSeconds = mktime(&tm) - 21600; // convert from UTC to MT
+                time_t activityDateSeconds = mktime(&tm); // convert from UTC to MT
 
                 int activitySecondsFromNow = now - activityDateSeconds;
 
-                int lag = 5; // 5 seconds lag
-                if (activitySecondsFromNow >= 0 && activitySecondsFromNow < 32 + lag) {
-                    activityArr[activitySecondsFromNow - lag] = isActive;
+                if (activitySecondsFromNow >= 0 && activitySecondsFromNow < 32) {
+                    activityArr[activitySecondsFromNow] = isActive;
                 }
             }
 
             for (int i = 0; i < 32; i++) {
-                cout << activityArr[i] << " ";
-
                 for (int j = 0; j < 16; j++) {
                     if (activityArr[i] == 0) {
                         canvas()->SetPixel(i, j, 0, 200, 0);
                     } else if (activityArr[i] == 1) {
                         canvas()->SetPixel(i, j, 200, 0, 0);
                     } else if (activityArr[i] == 2) {
-                        canvas()->SetPixel(i, j, 200, 200, 0);
+                        canvas()->SetPixel(i, j, 150, 150, 0);
                     }
                 }
             }
 
-            cout << endl;
-
-            usleep(1000000);
+            usleep(500000);
         }
     }
 
