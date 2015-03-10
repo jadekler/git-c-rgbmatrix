@@ -3,13 +3,28 @@
 // This code is public domain
 // (but note, that the led-matrix library this depends on is GPL v2)
 
-#include "lib/matrix/include/led-matrix.h"
-#include "lib/matrix/include/threaded-canvas-manipulator.h"
+#include "led-matrix.h"
+#include "threaded-canvas-manipulator.h"
 
 #include <assert.h>
 #include <getopt.h>
+#include <limits.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <algorithm>
+
+#include <iostream>
+#include <curl/curl.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include "lib/json-parser/json.h"
 
 using namespace rgb_matrix;
+using namespace std;
 
 class VolumeBars : public ThreadedCanvasManipulator {
 public:
@@ -28,12 +43,80 @@ public:
 
         // Start the loop
         while (running()) {
-            canvas()->SetPixel(5, 15, 0, 200, 0);
-            usleep(delay_ms_ * 1000);
+            string data = performGet();
+
+            time_t now;
+            time(&now);
+
+            int activityArr[32]; // 0 = inactive, 1 = active, 2 = unknown
+            for (int i = 0; i < 32; i++) {
+                activityArr[i] = 2;
+            }
+
+            char const *input = data.c_str();
+            json_value jsonParsedInput;
+
+            jsonParsedInput = *json_parse(input, strlen(input));
+
+            for (int i = 0; i < jsonParsedInput.u.array.length; i++) {
+                json_value *arrItem = jsonParsedInput.u.array.values[i];
+
+                bool isActive = arrItem->u.object.values[0].value->u.boolean;
+                string activityDateString = arrItem->u.object.values[1].value->u.string.ptr;
+                activityDateString = activityDateString.substr(0, 19);                      // remove microseconds
+                replace(activityDateString.begin(), activityDateString.end(), 'T', ' ');    // remove T in middle
+
+                struct tm tm;
+                strptime(activityDateString.c_str(), "%Y-%m-%d %H:%M:%S", &tm);
+                time_t activityDateSeconds = mktime(&tm); // convert from UTC to MT
+
+                int activitySecondsFromNow = now - activityDateSeconds;
+
+                if (activitySecondsFromNow >= 0 && activitySecondsFromNow < 32) {
+                    activityArr[activitySecondsFromNow] = isActive;
+                }
+            }
+
+            for (int i = 0; i < 32; i++) {
+                for (int j = 0; j < 16; j++) {
+                    if (activityArr[i] == 0) {
+                        canvas()->SetPixel(i, j, 0, 200, 0);
+                    } else if (activityArr[i] == 1) {
+                        canvas()->SetPixel(i, j, 200, 0, 0);
+                    } else if (activityArr[i] == 2) {
+                        canvas()->SetPixel(i, j, 150, 150, 0);
+                    }
+                }
+            }
+
+            usleep(500000);
         }
     }
 
 private:
+    static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+        ((std::string*)userp)->append((char*)contents, size * nmemb);
+        return size * nmemb;
+    }
+
+    string performGet() {
+        CURL *curl; //our curl object
+
+        curl_global_init(CURL_GLOBAL_ALL); //pretty obvious
+        curl = curl_easy_init();
+
+        std::string readBuffer;
+        curl_easy_setopt(curl, CURLOPT_URL, "http://pingpongping.cfapps.io/activity");
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+        curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        curl_global_cleanup();
+
+        return readBuffer;
+    }
+
     void drawBarRow(int bar, uint8_t y, uint8_t r, uint8_t g, uint8_t b) {
         for (uint8_t x = bar * barWidth_; x < (bar + 1) * barWidth_; ++x) {
             canvas()->SetPixel(x, height_ - 1 - y, r, g, b);
