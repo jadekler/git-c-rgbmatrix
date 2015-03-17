@@ -2,7 +2,6 @@
 //
 // This code is public domain
 // (but note, that the led-matrix library this depends on is GPL v2)
-
 #include "led-matrix.h"
 #include "threaded-canvas-manipulator.h"
 
@@ -26,14 +25,14 @@
 using namespace rgb_matrix;
 using namespace std;
 
-class VolumeBars : public ThreadedCanvasManipulator {
+class PingPongPing : public ThreadedCanvasManipulator {
 public:
-    VolumeBars(Canvas *m, int delay_ms = 50, int numBars = 8)
+    PingPongPing(Canvas *m, int delay_ms = 50, int numBars = 8)
             : ThreadedCanvasManipulator(m), delay_ms_(delay_ms),
               numBars_(numBars), t_(0) {
     }
 
-    ~VolumeBars() {
+    ~PingPongPing() {
         delete[] barHeights_;
     }
 
@@ -54,27 +53,29 @@ public:
             }
 
             char const *input = data.c_str();
-            json_value jsonParsedInput;
+            json_value *jsonParsedInput;
 
-            jsonParsedInput = *json_parse(input, strlen(input));
+            jsonParsedInput = json_parse(input, strlen(input));
 
-            for (int i = 0; i < jsonParsedInput.u.array.length; i++) {
-                json_value *arrItem = jsonParsedInput.u.array.values[i];
+            if (jsonParsedInput) {
+		for (int i = 0; i < jsonParsedInput->u.array.length; i++) {
+		    json_value *arrItem = jsonParsedInput->u.array.values[i];
 
-                bool isActive = arrItem->u.object.values[0].value->u.boolean;
-                string activityDateString = arrItem->u.object.values[1].value->u.string.ptr;
-                activityDateString = activityDateString.substr(0, 19);                      // remove microseconds
-                replace(activityDateString.begin(), activityDateString.end(), 'T', ' ');    // remove T in middle
+		    bool isActive = arrItem->u.object.values[0].value->u.boolean;
+		    string activityDateString = arrItem->u.object.values[1].value->u.string.ptr;
+		    activityDateString = activityDateString.substr(0, 19);                      // remove microseconds
+		    replace(activityDateString.begin(), activityDateString.end(), 'T', ' ');    // remove T in middle
 
-                struct tm tm;
-                strptime(activityDateString.c_str(), "%Y-%m-%d %H:%M:%S", &tm);
-                time_t activityDateSeconds = mktime(&tm); // convert from UTC to MT
+		    struct tm tm;
+		    strptime(activityDateString.c_str(), "%Y-%m-%d %H:%M:%S", &tm);
+		    time_t activityDateSeconds = mktime(&tm); // convert from UTC to MT
 
-                int activitySecondsFromNow = now - activityDateSeconds;
+		    int activitySecondsFromNow = now - activityDateSeconds;
 
-                if (activitySecondsFromNow >= 0 && activitySecondsFromNow < 32) {
-                    activityArr[activitySecondsFromNow] = isActive;
-                }
+		    if (activitySecondsFromNow >= 0 && activitySecondsFromNow < 32) {
+			activityArr[activitySecondsFromNow] = isActive;
+		    }
+		}
             }
 
             for (int i = 0; i < 32; i++) {
@@ -84,12 +85,10 @@ public:
                     } else if (activityArr[i] == 1) {
                         canvas()->SetPixel(i, j, 200, 0, 0);
                     } else if (activityArr[i] == 2) {
-                        canvas()->SetPixel(i, j, 150, 150, 0);
+                        canvas()->SetPixel(i, j, 200, 150, 0);
                     }
                 }
             }
-
-            usleep(500000);
         }
     }
 
@@ -174,7 +173,7 @@ int main(int argc, char *argv[]) {
 
     // The ThreadedCanvasManipulator objects are filling
     // the matrix continuously.
-    ThreadedCanvasManipulator *image_gen = new VolumeBars(canvas, scroll_ms, canvas->width() / 2);
+    ThreadedCanvasManipulator *image_gen = new PingPongPing(canvas, scroll_ms, canvas->width() / 2);
 
     // Image generating demo is crated. Now start the thread.
     image_gen->Start();
@@ -195,6 +194,7 @@ int main(int argc, char *argv[]) {
     // Stop image generating thread.
     delete image_gen;
     delete canvas;
+    delete matrix;
 
     return 0;
 }
